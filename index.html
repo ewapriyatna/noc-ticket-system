@@ -203,6 +203,7 @@
             display: flex;
             gap: 10px;
             margin-top: 20px;
+            flex-wrap: wrap;
         }
         
         .btn-sm {
@@ -263,6 +264,7 @@
             padding: 15px;
             text-align: left;
             border-bottom: 1px solid #ddd;
+            font-size: 0.9em;
         }
         
         table th {
@@ -304,7 +306,8 @@
         
         .action-buttons {
             display: flex;
-            gap: 8px;
+            gap: 5px;
+            flex-wrap: wrap;
         }
         
         .alert {
@@ -336,6 +339,7 @@
             z-index: 1000;
             justify-content: center;
             align-items: center;
+            padding: 20px;
         }
         
         .modal.active {
@@ -349,7 +353,7 @@
             max-width: 800px;
             max-height: 80vh;
             overflow-y: auto;
-            width: 90%;
+            width: 100%;
         }
         
         .modal-header {
@@ -378,6 +382,8 @@
             font-size: 0.9em;
             line-height: 1.6;
             margin-bottom: 20px;
+            max-height: 400px;
+            overflow-y: auto;
         }
         
         .loading {
@@ -415,6 +421,21 @@
             font-size: 3em;
             margin-bottom: 20px;
         }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            table {
+                font-size: 0.8em;
+            }
+            .modal-content {
+                padding: 20px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -425,7 +446,6 @@
         </div>
         
         <div class="main-content">
-            <!-- Navigation Tabs -->
             <div class="nav-tabs">
                 <button class="tab-btn active" onclick="switchTab(event, 'dashboard')">📊 Dashboard</button>
                 <button class="tab-btn" onclick="switchTab(event, 'list')">📋 Daftar Ticket</button>
@@ -679,7 +699,8 @@
         // ===== LOAD OPTIONS =====
         async function loadOptions() {
             try {
-                const response = await fetch(`${API_URL}?action=getOptions`);
+                const url = `${API_URL}?action=getOptions`;
+                const response = await fetch(url);
                 const result = await response.json();
                 
                 if (result.success) {
@@ -695,42 +716,36 @@
         function populateSelects() {
             if (!options.regional) return;
 
-            // Create Regional
             const createRegional = document.getElementById('createRegional');
             createRegional.innerHTML = '<option value="">Pilih Regional</option>';
             options.regional.forEach(region => {
                 createRegional.innerHTML += `<option value="${region}">${region}</option>`;
             });
             
-            // Create Vendor
             const createVendor = document.getElementById('createVendor');
             createVendor.innerHTML = '<option value="">Pilih Vendor</option>';
             options.vendor.forEach(vendor => {
                 createVendor.innerHTML += `<option value="${vendor}">${vendor}</option>`;
             });
             
-            // Edit Status
             const editStatus = document.getElementById('editStatus');
             editStatus.innerHTML = '';
             options.status.forEach(status => {
                 editStatus.innerHTML += `<option value="${status}">${status}</option>`;
             });
             
-            // Filter Status
             const filterStatus = document.getElementById('filterStatus');
             filterStatus.innerHTML = '<option value="">Semua</option>';
             options.status.forEach(status => {
                 filterStatus.innerHTML += `<option value="${status}">${status}</option>`;
             });
             
-            // Filter Vendor
             const filterVendor = document.getElementById('filterVendor');
             filterVendor.innerHTML = '<option value="">Semua</option>';
             options.vendor.forEach(vendor => {
                 filterVendor.innerHTML += `<option value="${vendor}">${vendor}</option>`;
             });
             
-            // Filter Regional
             const filterRegional = document.getElementById('filterRegional');
             filterRegional.innerHTML = '<option value="">Semua</option>';
             options.regional.forEach(region => {
@@ -741,7 +756,8 @@
         // ===== LOAD DASHBOARD =====
         async function loadDashboard() {
             try {
-                const response = await fetch(`${API_URL}?action=getTickets`);
+                const url = `${API_URL}?action=getTickets`;
+                const response = await fetch(url);
                 const result = await response.json();
                 
                 if (result.success) {
@@ -763,7 +779,8 @@
                 document.getElementById('tableContainer').style.display = 'none';
                 document.getElementById('emptyState').style.display = 'none';
                 
-                const response = await fetch(`${API_URL}?action=getTickets`);
+                const url = `${API_URL}?action=getTickets`;
+                const response = await fetch(url);
                 const result = await response.json();
                 
                 if (result.success) {
@@ -795,7 +812,7 @@
                     <tr>
                         <td><span class="status-badge ${statusClass}">${ticket.Status}</span></td>
                         <td><strong>${ticket.TT_Customer}</strong></td>
-                        <td>${ticket.TT_Description.substring(0, 50)}${ticket.TT_Description.length > 50 ? '...' : ''}</td>
+                        <td>${ticket.TT_Description.substring(0, 30)}${ticket.TT_Description.length > 30 ? '...' : ''}</td>
                         <td>${ticket.Regional}</td>
                         <td>${ticket.Vendor}</td>
                         <td>${ticket.Start_Time}</td>
@@ -844,24 +861,23 @@
             
             const summary = `TT Customer : ${ticket.TT_Customer}
 TT Description : ${ticket.TT_Description}
-${ticket.Device_Segment}
+Device Segment : ${ticket.Device_Segment}
 TT TBG : ${ticket.TT_TBG}
 Regional : ${ticket.Regional}
 Segment/Site Problem : ${ticket.Segment_Problem}
 CID : ${ticket.CID}
 Segment Length : ${ticket.Segment_Length}
 Start Time : ${ticket.Start_Time}
-Resolved Time : ${ticket.Resolved_Time || ''}
+Resolved Time : ${ticket.Resolved_Time || '-'}
 Duration : ${duration}
 Root Cause : ${ticket.Root_Cause || '-'}
 Responsibility : ${ticket.Responsibility || '-'}
-Problem Point Coordinate : ${ticket.Problem_Coordinate || ''}
+Problem Point Coordinate : ${ticket.Problem_Coordinate || '-'}
 Restoration Action : ${ticket.Restoration_Action || '-'}
 Status : ${ticket.Status}
 Vendor : ${ticket.Vendor}
 
 Progress Update
-
 ${ticket.Progress_Log}`;
             
             document.getElementById('summaryText').textContent = summary;
@@ -912,17 +928,14 @@ ${ticket.Progress_Log}`;
             ticket.Progress_Log = `[${new Date().toLocaleString('id-ID')}] - Ticket Dibuat`;
             
             try {
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        action: 'createTicket',
-                        ...ticket
-                    })
-                });
+                const params = new URLSearchParams();
+                params.append('action', 'createTicket');
                 
+                for (let key in ticket) {
+                    params.append(key, ticket[key]);
+                }
+                
+                const response = await fetch(`${API_URL}?${params.toString()}`);
                 const result = await response.json();
                 
                 if (result.success) {
@@ -935,7 +948,7 @@ ${ticket.Progress_Log}`;
                 }
             } catch (error) {
                 console.error('Error creating ticket:', error);
-                showAlert('❌ Gagal membuat ticket', 'error');
+                showAlert('❌ Gagal membuat ticket: ' + error.message, 'error');
             }
         }
 
@@ -960,17 +973,14 @@ ${ticket.Progress_Log}`;
             }
             
             try {
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        action: 'updateTicket',
-                        ...updatedTicket
-                    })
-                });
+                const params = new URLSearchParams();
+                params.append('action', 'updateTicket');
                 
+                for (let key in updatedTicket) {
+                    params.append(key, updatedTicket[key]);
+                }
+                
+                const response = await fetch(`${API_URL}?${params.toString()}`);
                 const result = await response.json();
                 
                 if (result.success) {
@@ -983,7 +993,7 @@ ${ticket.Progress_Log}`;
                 }
             } catch (error) {
                 console.error('Error updating ticket:', error);
-                showAlert('❌ Gagal memperbarui ticket', 'error');
+                showAlert('❌ Gagal memperbarui ticket: ' + error.message, 'error');
             }
         }
 
@@ -1003,17 +1013,14 @@ ${ticket.Progress_Log}`;
             updatedTicket.Progress_Log = `${currentEditingTicket.Progress_Log}\n[${nowStr}] Ticket Ditutup`;
             
             try {
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        action: 'updateTicket',
-                        ...updatedTicket
-                    })
-                });
+                const params = new URLSearchParams();
+                params.append('action', 'updateTicket');
                 
+                for (let key in updatedTicket) {
+                    params.append(key, updatedTicket[key]);
+                }
+                
+                const response = await fetch(`${API_URL}?${params.toString()}`);
                 const result = await response.json();
                 
                 if (result.success) {
@@ -1026,7 +1033,7 @@ ${ticket.Progress_Log}`;
                 }
             } catch (error) {
                 console.error('Error closing ticket:', error);
-                showAlert('❌ Gagal menutup ticket', 'error');
+                showAlert('❌ Gagal menutup ticket: ' + error.message, 'error');
             }
         }
 
@@ -1040,17 +1047,11 @@ ${ticket.Progress_Log}`;
         // ===== DELETE TICKET =====
         async function deleteTicket(ttCustomer) {
             try {
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        action: 'deleteTicket',
-                        TT_Customer: ttCustomer
-                    })
-                });
+                const params = new URLSearchParams();
+                params.append('action', 'deleteTicket');
+                params.append('TT_Customer', ttCustomer);
                 
+                const response = await fetch(`${API_URL}?${params.toString()}`);
                 const result = await response.json();
                 
                 if (result.success) {
@@ -1063,7 +1064,7 @@ ${ticket.Progress_Log}`;
                 }
             } catch (error) {
                 console.error('Error deleting ticket:', error);
-                showAlert('❌ Gagal menghapus ticket', 'error');
+                showAlert('❌ Gagal menghapus ticket: ' + error.message, 'error');
             }
         }
 
